@@ -264,14 +264,18 @@ function startRecord() {
 }
 
 function stopRecord() {
-  isRecording = false;
-  if (recognition) { recognition.onend = null; recognition.stop(); }
-  document.getElementById("micBtn").classList.remove("recording");
-  document.getElementById("micLabel").textContent = "Tocá para grabar el pedido";
-  if (finalText.trim()) {
-    document.getElementById("recordActions").style.display = "block";
+    isRecording = false;
+    if (recognition) { recognition.onend = null; recognition.stop(); }
+    document.getElementById("micBtn").classList.remove("recording");
+    document.getElementById("micLabel").textContent = "Tocá para grabar el pedido";
+    const boxText = document.getElementById("transcriptBox").textContent.trim();
+    if (!finalText.trim() && boxText && !boxText.includes("aparecerá")) {
+      finalText = boxText;
+    }
+    if (finalText.trim()) {
+      document.getElementById("recordActions").style.display = "block";
+    }
   }
-}
 
 function resetRecord() {
   stopRecord();
