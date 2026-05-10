@@ -19,25 +19,25 @@ def get_db():
     return conn
 
 def init_db():
-    with get_db() as db:
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS pedidos (
-                id            INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha         TEXT NOT NULL,
-                cliente       TEXT NOT NULL,
-                producto      TEXT NOT NULL,
-                cantidad      REAL NOT NULL DEFAULT 1,
-                precio_venta  REAL NOT NULL DEFAULT 0,
-                precio_costo  REAL NOT NULL DEFAULT 0,
-                total_venta   REAL NOT NULL DEFAULT 0,
-                total_costo   REAL NOT NULL DEFAULT 0,
-                ganancia      REAL NOT NULL DEFAULT 0,
-                margen        REAL NOT NULL DEFAULT 0,
-                notas         TEXT DEFAULT ''
-            )
-        """)
-        db.commit()
-
+      conn = sqlite3.connect(DB_PATH)
+      conn.execute("""
+          CREATE TABLE IF NOT EXISTS pedidos (
+              id            INTEGER PRIMARY KEY AUTOINCREMENT,
+              fecha         TEXT NOT NULL,
+              cliente       TEXT NOT NULL,
+              producto      TEXT NOT NULL,
+              cantidad      REAL NOT NULL DEFAULT 1,
+              precio_venta  REAL NOT NULL DEFAULT 0,
+              precio_costo  REAL NOT NULL DEFAULT 0,
+              total_venta   REAL NOT NULL DEFAULT 0,
+              total_costo   REAL NOT NULL DEFAULT 0,
+              ganancia      REAL NOT NULL DEFAULT 0,
+              margen        REAL NOT NULL DEFAULT 0,
+              notas         TEXT DEFAULT ''
+          )
+      """)
+      conn.commit()
+      conn.close()
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def logged_in():
     return session.get("auth") is True
