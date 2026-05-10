@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1F4E79">
+<title>Reventa</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; overflow-x: hidden; }
+
+/* ── Header ── */
+header { background: #1F4E79; color: white; padding: 16px 20px;
+         display: flex; align-items: center; justify-content: space-between;
+         position: sticky; top: 0; z-index: 10; }
+header h1 { font-size: 20px; font-weight: 700; }
+header a { color: rgba(255,255,255,.7); font-size: 13px; text-decoration: none; }
+
+/* ── Tabs ── */
+.tabs { display: flex; background: white; border-bottom: 1px solid #e0e0e0; }
+.tab  { flex: 1; padding: 14px; text-align: center; font-size: 14px; font-weight: 600;
+        color: #888; cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; }
+.tab.active { color: #1F4E79; border-bottom-color: #1F4E79; }
+
+/* ── Secciones ── */
+.section { display: none; padding: 20px 16px; }
+.section.active { display: block; }
+
+/* ── Botón grabar ── */
+.mic-wrap { display: flex; flex-direction: column; align-items: center; padding: 32px 0 24px; }
+.mic-btn {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: #2E7D32; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; box-shadow: 0 6px 20px rgba(46,125,50,.4);
+  transition: transform .15s, background .2s, box-shadow .2s;
+  -webkit-user-select: none; user-select: none;
+}
+.mic-btn:active, .mic-btn.recording { background: #C62828; box-shadow: 0 6px 20px rgba(198,40,40,.5); transform: scale(.95); }
+.mic-btn.processing { background: #E65100; box-shadow: 0 6px 20px rgba(230,81,0,.4); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+.mic-label { margin-top: 16px; font-size: 15px; color: #555; font-weight: 500; text-align: center; }
+
+/* ── Transcript ── */
+.transcript-box { background: white; border-radius: 12px; padding: 16px;
+                   min-height: 60px; font-size: 15px; color: #333; line-height: 1.5;
+                   border: 1px solid #e0e0e0; margin-bottom: 16px; }
+.transcript-box.empty { color: #aaa; font-style: italic; }
+
+/* ── Card de confirmación ── */
+.confirm-card { background: white; border-radius: 14px; padding: 20px;
+                box-shadow: 0 2px 12px rgba(0,0,0,.08); margin-bottom: 16px; }
+.confirm-card h3 { color: #1F4E79; font-size: 16px; margin-bottom: 12px; }
+.field { margin-bottom: 10px; }
+.field label { font-size: 12px; color: #888; display: block; margin-bottom: 3px; }
+.field input { width: 100%; padding: 10px 12px; border: 1px solid #ddd;
+               border-radius: 8px; font-size: 15px; }
+.product-row { background: #f8f9fa; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+.product-row .pname { font-weight: 600; margin-bottom: 8px; font-size: 15px; }
+.product-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.product-grid .field label { font-size: 11px; }
+.ganancia-chip { display: inline-block; background: #E8F5E9; color: #2E7D32;
+                 padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 6px; }
+
+/* ── Botones ── */
+.btn-row { display: flex; gap: 10px; margin-top: 8px; }
+.btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 15px;
+       font-weight: 600; cursor: pointer; transition: opacity .2s; }
+.btn:active { opacity: .8; }
+.btn-primary { background: #1F4E79; color: white; }
+.btn-secondary { background: #f0f4f8; color: #555; }
+.btn-danger { background: #fff; color: #c62828; border: 1px solid #c62828; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+         background: #1F4E79; color: white; padding: 12px 24px;
+         border-radius: 24px; font-size: 14px; font-weight: 500;
+         box-shadow: 0 4px 16px rgba(0,0,0,.2); opacity: 0;
+         transition: opacity .3s; pointer-events: none; white-space: nowrap; z-index: 100; }
+.toast.show { opacity: 1; }
+.toast.success { background: #2E7D32; }
+.toast.error   { background: #C62828; }
+
+/* ── Lista de pedidos ── */
+.pedido-card { background: white; border-radius: 12px; padding: 16px;
+               margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.pedido-card .cliente { font-weight: 700; font-size: 15px; color: #1F4E79; }
+.pedido-card .fecha   { font-size: 12px; color: #aaa; margin-bottom: 8px; }
+.pedido-card .item    { display: flex; justify-content: space-between; align-items: center;
+                         font-size: 14px; padding: 4px 0; border-bottom: 1px solid #f0f0f0; }
+.pedido-card .item:last-child { border-bottom: none; }
+.pedido-card .item .right { text-align: right; }
+.badge { display: inline-block; background: #E8F5E9; color: #2E7D32;
+         padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+/* ── Clientes ── */
+.client-card { background: white; border-radius: 12px; padding: 16px;
+               margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+               box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+.client-card .name    { font-weight: 700; font-size: 15px; color: #1F4E79; }
+.client-card .meta    { font-size: 13px; color: #888; }
+.client-card .dl-btn  { padding: 8px 14px; background: #f0f4f8; border: none;
+                         border-radius: 8px; font-size: 13px; cursor: pointer; color: #1F4E79; font-weight: 600; }
+
+/* ── Exportar ── */
+.export-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+.export-bar .btn { padding: 12px 16px; font-size: 14px; }
+
+/* ── Empty state ── */
+.empty-state { text-align: center; padding: 48px 16px; color: #bbb; font-size: 15px; }
+
+/* ── Spinner ── */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3);
+           border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛒 Reventa</h1>
+  <a href="/logout">Salir</a>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('grabar')">🎤 Grabar</div>
+  <div class="tab" onclick="showTab('pedidos')">📋 Pedidos</div>
+  <div class="tab" onclick="showTab('clientes')">👥 Clientes</div>
+</div>
+
+<!-- ══════════════ TAB: GRABAR ══════════════ -->
+<div id="tab-grabar" class="section active">
+
+  <!-- Estado: idle / grabar -->
+  <div id="view-record">
+    <div class="mic-wrap">
+      <button class="mic-btn" id="micBtn" onclick="toggleRecord()">🎤</button>
+      <div class="mic-label" id="micLabel">Tocá para grabar el pedido</div>
+    </div>
+    <div id="transcriptBox" class="transcript-box empty">El texto aparecerá acá mientras hablás...</div>
+    <div id="recordActions" style="display:none">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="processTranscript()">Analizar con IA ✨</button>
+        <button class="btn btn-secondary" onclick="resetRecord()">Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado: confirmación -->
+  <div id="view-confirm" style="display:none">
+    <div class="confirm-card">
+      <h3>Confirmar pedido</h3>
+      <div class="field">
+        <label>Cliente</label>
+        <input type="text" id="cfCliente" placeholder="Nombre del cliente">
+      </div>
+      <div id="cfProductos"></div>
+      <div class="field">
+        <label>Notas (opcional)</label>
+        <input type="text" id="cfNotas" placeholder="Observaciones...">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveOrder()">💾 Guardar pedido</button>
+      <button class="btn btn-secondary" onclick="resetRecord()">Cancelar</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ TAB: PEDIDOS ══════════════ -->
+<div id="tab-pedidos" class="section">
+  <div class="export-bar">
+    <button class="btn btn-primary" onclick="downloadExcel()">📊 Descargar Excel</button>
+    <button class="btn btn-secondary" onclick="loadOrders()">↻ Actualizar</button>
+  </div>
+  <div id="ordersList"><div class="empty-state">Cargando...</div></div>
+</div>
+
+<!-- ══════════════ TAB: CLIENTES ══════════════ -->
+<div id="tab-clientes" class="section">
+  <div id="clientsList"><div class="empty-state">Cargando...</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Estado ────────────────────────────────────────────────────────────────────
+let recognition   = null;
+let isRecording   = false;
+let finalText     = "";
+let extractedData = null;
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach((t, i) => {
+    const names = ["grabar","pedidos","clientes"];
+    t.classList.toggle("active", names[i] === name);
+  });
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  if (name === "pedidos")  loadOrders();
+  if (name === "clientes") loadClients();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + type;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// ── Grabar ────────────────────────────────────────────────────────────────────
+function toggleRecord() {
+  if (isRecording) stopRecord();
+  else startRecord();
+}
+
+function startRecord() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast("Tu navegador no soporta grabación de voz. Usá Chrome en Android.", "error");
+    return;
+  }
+  finalText  = "";
+  recognition = new SR();
+  recognition.lang = "es-AR";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById("micBtn").classList.add("recording");
+    document.getElementById("micLabel").textContent = "Hablá... tocá de nuevo para terminar";
+    const box = document.getElementById("transcriptBox");
+    box.textContent = "";
+    box.classList.remove("empty");
+    document.getElementById("recordActions").style.display = "none";
+  };
+
+  recognition.onresult = (e) => {
+    let interim = "", final = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    finalText += final;
+    document.getElementById("transcriptBox").textContent = finalText + interim;
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== "no-speech" && e.error !== "aborted") {
+      showToast("Error de micrófono: " + e.error, "error");
+    }
+    stopRecord();
+  };
+
+  recognition.onend = () => {
+    if (isRecording) recognition.start(); // reiniciar si sigue grabando
+  };
+
+  recognition.start();
+}
+
+function stopRecord() {
+  isRecording = false;
+  if (recognition) { recognition.onend = null; recognition.stop(); }
+  document.getElementById("micBtn").classList.remove("recording");
+  document.getElementById("micLabel").textContent = "Tocá para grabar el pedido";
+  if (finalText.trim()) {
+    document.getElementById("recordActions").style.display = "block";
+  }
+}
+
+function resetRecord() {
+  stopRecord();
+  finalText = "";
+  extractedData = null;
+  document.getElementById("transcriptBox").textContent = "El texto aparecerá acá mientras hablás...";
+  document.getElementById("transcriptBox").classList.add("empty");
+  document.getElementById("recordActions").style.display = "none";
+  document.getElementById("view-record").style.display = "";
+  document.getElementById("view-confirm").style.display = "none";
+}
+
+// ── Procesar con Claude ───────────────────────────────────────────────────────
+async function processTranscript() {
+  const texto = finalText.trim();
+  if (!texto) return;
+
+  const btn = document.querySelector("#recordActions .btn-primary");
+  btn.innerHTML = '<span class="spinner"></span> Analizando...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/extract", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ texto })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    extractedData = data;
+    showConfirm(data);
+  } catch (e) {
+    showToast("Error: " + e.message, "error");
+    btn.innerHTML = "Analizar con IA ✨";
+    btn.disabled = false;
+  }
+}
+
+// ── Pantalla de confirmación ──────────────────────────────────────────────────
+function showConfirm(data) {
+  document.getElementById("cfCliente").value = data.cliente || "";
+  document.getElementById("cfNotas").value   = data.notas  || "";
+
+  const cont = document.getElementById("cfProductos");
+  cont.innerHTML = "";
+  (data.productos || []).forEach((p, i) => {
+    const pv  = p.precio_venta  || 0;
+    const pc  = p.precio_costo  || 0;
+    const qty = p.cantidad       || 1;
+    const tv  = qty * pv;
+    const gan = tv - qty * pc;
+    const mrg = tv > 0 ? Math.round(gan / tv * 100) : 0;
+    cont.innerHTML += `
+      <div class="product-row" data-idx="${i}">
+        <div class="pname">${p.nombre || "Producto"}</div>
+        <div class="product-grid">
+          <div class="field"><label>Cantidad</label>
+            <input type="number" min="0" step="any" value="${qty}" oninput="recalc(${i})">
+          </div>
+          <div class="field"><label>P. Venta</label>
+            <input type="number" min="0" step="any" value="${pv}" oninput="recalc(${i})">
+          </div>
+          <div class="field"><label>P. Costo</label>
+            <input type="number" min="0" step="any" value="${pc}" oninput="recalc(${i})">
+          </div>
+        </div>
+        <div class="ganancia-chip" id="chip-${i}">
+          ${pv > 0 ? `Ganancia ${mrg}% · $${gan.toFixed(0)}` : "Sin precio"}
+        </div>
+      </div>`;
+  });
+
+  document.getElementById("view-record").style.display = "none";
+  document.getElementById("view-confirm").style.display = "block";
+}
+
+function recalc(idx) {
+  const row  = document.querySelector(`.product-row[data-idx="${idx}"]`);
+  const inps = row.querySelectorAll("input");
+  const qty  = parseFloat(inps[0].value) || 0;
+  const pv   = parseFloat(inps[1].value) || 0;
+  const pc   = parseFloat(inps[2].value) || 0;
+  const tv   = qty * pv;
+  const gan  = tv - qty * pc;
+  const mrg  = tv > 0 ? Math.round(gan / tv * 100) : 0;
+  const chip = document.getElementById("chip-" + idx);
+  chip.textContent = pv > 0 ? `Ganancia ${mrg}% · $${gan.toFixed(0)}` : "Sin precio";
+}
+
+// ── Guardar pedido ────────────────────────────────────────────────────────────
+async function saveOrder() {
+  const cliente = document.getElementById("cfCliente").value.trim() || "Sin nombre";
+  const notas   = document.getElementById("cfNotas").value.trim();
+  const rows    = document.querySelectorAll(".product-row");
+  const productos = [];
+
+  rows.forEach((row, i) => {
+    const inps = row.querySelectorAll("input");
+    const p    = (extractedData.productos || [])[i] || {};
+    productos.push({
+      nombre:        p.nombre || "Producto",
+      cantidad:      parseFloat(inps[0].value) || 1,
+      precio_venta:  parseFloat(inps[1].value) || 0,
+      precio_costo:  parseFloat(inps[2].value) || 0,
+    });
+  });
+
+  const btn = document.querySelector("#view-confirm .btn-primary");
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ cliente, notas, productos })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error("Error al guardar");
+    showToast(`✅ Pedido de ${cliente} guardado`, "success");
+    resetRecord();
+  } catch(e) {
+    showToast("Error: " + e.message, "error");
+    btn.innerHTML = "💾 Guardar pedido";
+    btn.disabled = false;
+  }
+}
+
+// ── Listar pedidos ────────────────────────────────────────────────────────────
+async function loadOrders() {
+  const cont = document.getElementById("ordersList");
+  cont.innerHTML = '<div class="empty-state">Cargando...</div>';
+  try {
+    const res  = await fetch("/api/orders");
+    const data = await res.json();
+    if (!data.length) {
+      cont.innerHTML = '<div class="empty-state">No hay pedidos todavía.</div>';
+      return;
+    }
+    cont.innerHTML = data.map(p => `
+      <div class="pedido-card">
+        <div class="cliente">${p.cliente}</div>
+        <div class="fecha">${p.fecha}</div>
+        <div class="item">
+          <span>${p.producto} x${p.cantidad}</span>
+          <div class="right">
+            <div>$${p.total_venta.toFixed(0)}</div>
+            <span class="badge">${p.margen}%</span>
+          </div>
+        </div>
+      </div>`).join("");
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state">Error al cargar pedidos.</div>';
+  }
+}
+
+// ── Listar clientes ───────────────────────────────────────────────────────────
+async function loadClients() {
+  const cont = document.getElementById("clientsList");
+  cont.innerHTML = '<div class="empty-state">Cargando...</div>';
+  try {
+    const res  = await fetch("/api/clients");
+    const data = await res.json();
+    if (!data.length) {
+      cont.innerHTML = '<div class="empty-state">No hay clientes todavía.</div>';
+      return;
+    }
+    cont.innerHTML = data.map(c => `
+      <div class="client-card">
+        <div>
+          <div class="name">${c.cliente}</div>
+          <div class="meta">${c.pedidos} pedidos · $${(c.total||0).toFixed(0)} total</div>
+        </div>
+        <button class="dl-btn" onclick="downloadExcel('${encodeURIComponent(c.cliente)}')">
+          📊 Excel
+        </button>
+      </div>`).join("");
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state">Error al cargar clientes.</div>';
+  }
+}
+
+// ── Descargar Excel ───────────────────────────────────────────────────────────
+function downloadExcel(cliente) {
+  const url = cliente ? `/api/export?cliente=${cliente}` : "/api/export";
+  window.location.href = url;
+}
+</script>
+</body>
+</html>

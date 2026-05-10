@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reventa — Ingresar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh;
+         display: flex; align-items: center; justify-content: center; }
+  .card { background: white; border-radius: 16px; padding: 40px 32px;
+          width: 100%; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,.1); }
+  h1 { color: #1F4E79; font-size: 28px; margin-bottom: 6px; }
+  p  { color: #888; font-size: 14px; margin-bottom: 28px; }
+  label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+  input { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 10px;
+          font-size: 16px; outline: none; transition: border-color .2s; }
+  input:focus { border-color: #1F4E79; }
+  .error { color: #c62828; font-size: 13px; margin: 10px 0; }
+  button { width: 100%; margin-top: 20px; padding: 14px;
+           background: #1F4E79; color: white; border: none;
+           border-radius: 10px; font-size: 16px; font-weight: 600;
+           cursor: pointer; transition: background .2s; }
+  button:hover { background: #163A5F; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Reventa</h1>
+  <p>Ingresá tu contraseña para continuar</p>
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+  <form method="POST">
+    <label>Contraseña</label>
+    <input type="password" name="password" autofocus placeholder="••••••••">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: reventa-pedidos
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: LOGIN_PASSWORD
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_PATH
+        value: /data/pedidos.db
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
