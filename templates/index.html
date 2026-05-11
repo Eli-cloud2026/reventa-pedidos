@@ -226,7 +226,7 @@ function startRecord() {
   finalText  = "";
   recognition = new SR();
   recognition.lang = "es-AR";
-  recognition.continuous = true;
+  recognition.continuous = false;
   recognition.interimResults = true;
 
   recognition.onstart = () => {
@@ -257,7 +257,7 @@ function startRecord() {
   };
 
   recognition.onend = () => {
-    if (isRecording) recognition.start(); // reiniciar si sigue grabando
+    if (isRecording) stopRecord(); // reiniciar si sigue grabando
   };
 
   recognition.start();
