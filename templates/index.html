@@ -396,7 +396,7 @@ async function saveOrder() {
     const data = await res.json();
     if (!data.ok) throw new Error("Error al guardar");
     showToast(`✅ Pedido de ${cliente} guardado`, "success");
-    resetRecord();
+    setTimeout(() => { window.location.reload(); }, 2000);
   } catch(e) {
     showToast("Error: " + e.message, "error");
     btn.innerHTML = "💾 Guardar pedido";
