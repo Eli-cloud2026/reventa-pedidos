@@ -207,6 +207,11 @@ def export():
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # ── Main ──────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    init_db()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+ init_db()
+
+  @app.before_request
+  def ensure_db():
+      init_db()
+
+  if __name__ == "__main__":
+      app.run(debug=True, host="0.0.0.0", port=5000)
